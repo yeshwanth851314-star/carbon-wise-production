@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useRef, useEffect, useState } from "react";
 
@@ -40,7 +41,7 @@ export default function VideoBackground() {
       setTimeout(() => {
         if (video) {
           video.currentTime = 0;
-          video.play().catch((e) => console.error("Video play failed", e));
+          video.play().catch((e) => logger.error("Video play failed", e));
         }
       }, 100);
     };

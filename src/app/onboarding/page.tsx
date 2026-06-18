@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 import {
   Select,
   SelectContent,
@@ -20,17 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Leaf,
-  Car,
-  Zap,
-  Utensils,
-  ShoppingBag,
-  Trash2,
-  ArrowRight,
-  ArrowLeft,
-} from "lucide-react";
-import { saveAssessment } from "@/app/actions";
+import { ArrowLeft, ArrowRight, Car, Leaf, ShoppingBag, Trash2, Utensils, Zap } from "lucide-react";
+import { useStore } from "@/lib/store";
 
 export default function Onboarding() {
   const router = useRouter();
@@ -53,7 +45,7 @@ export default function Onboarding() {
           <div className="space-y-2">
             <Label>Primary Vehicle Type</Label>
             <Select
-              onValueChange={(val: any) =>
+              onValueChange={(val: string | null) =>
                 setFormData((f) => ({
                   ...f,
                   transport: { ...f.transport, vehicleType: val || "" },
@@ -136,7 +128,7 @@ export default function Onboarding() {
         <div className="space-y-2">
           <Label>Diet Type</Label>
           <Select
-            onValueChange={(val: any) =>
+            onValueChange={(val: string | null) =>
               setFormData((f) => ({ ...f, food: { dietType: val || "" } }))
             }
           >
@@ -160,7 +152,7 @@ export default function Onboarding() {
         <div className="space-y-2">
           <Label>Online/Retail Shopping Frequency</Label>
           <Select
-            onValueChange={(val: any) =>
+            onValueChange={(val: string | null) =>
               setFormData((f) => ({ ...f, shopping: { frequency: val || "" } }))
             }
           >
@@ -187,7 +179,7 @@ export default function Onboarding() {
           <div className="space-y-2">
             <Label>Recycling Habits</Label>
             <Select
-              onValueChange={(val: any) =>
+              onValueChange={(val: string | null) =>
                 setFormData((f) => ({
                   ...f,
                   waste: { ...f.waste, recycling: val || "" },
@@ -207,7 +199,7 @@ export default function Onboarding() {
           <div className="space-y-2">
             <Label>Single-Use Plastic Usage</Label>
             <Select
-              onValueChange={(val: any) =>
+              onValueChange={(val: string | null) =>
                 setFormData((f) => ({
                   ...f,
                   waste: { ...f.waste, plasticUsage: val || "" },
@@ -248,7 +240,9 @@ export default function Onboarding() {
     }
   };
 
-  const handleNext = async () => {
+  const addAssessment = useStore((state) => state.addAssessment);
+
+  const handleNext = () => {
     if (!validateStep(step)) {
       alert("Please fill out all fields for this step.");
       return;
@@ -259,10 +253,67 @@ export default function Onboarding() {
     } else {
       setLoading(true);
       try {
-        await saveAssessment(formData);
+        // Calculate scientifically realistic annual footprints (in kg CO2)
+        const weeksInYear = 52;
+        const daysInYear = 365;
+
+        // 1. Transport (kg CO2 per year)
+        const distancePerYear = formData.transport.weeklyDistance * weeksInYear;
+        let transportFactor = 0;
+        if (formData.transport.vehicleType === "Gasoline Car") transportFactor = 0.192;
+        else if (formData.transport.vehicleType === "Electric Vehicle") transportFactor = 0.053;
+        else if (formData.transport.vehicleType === "Public Transit") transportFactor = 0.105;
+        else transportFactor = 0; // Bicycle/Walk
+        const transportScore = distancePerYear * transportFactor;
+
+        // 2. Energy (kg CO2 per year)
+        // Global average grid intensity ~ 0.475 kg CO2 per kWh
+        const baseElectricity = formData.energy.monthlyElectricity * 12 * 0.475;
+        // Estimate AC usage: typical 1.5 kW AC unit running for X hours a day
+        const acElectricity = formData.energy.acUsageHours * daysInYear * 1.5 * 0.475;
+        const energyScore = baseElectricity + acElectricity;
+
+        // 3. Food (kg CO2 per year)
+        let foodScore = 2500; // Mixed average
+        if (formData.food.dietType === "Heavy Meat") foodScore = 3300;
+        else if (formData.food.dietType === "Vegetarian") foodScore = 1700;
+        else if (formData.food.dietType === "Vegan") foodScore = 1500;
+
+        // 4. Shopping (kg CO2 per year)
+        let shoppingScore = 400; // Monthly average
+        if (formData.shopping.frequency === "Frequent") shoppingScore = 1200;
+        else if (formData.shopping.frequency === "Weekly") shoppingScore = 800;
+        else if (formData.shopping.frequency === "Rarely") shoppingScore = 200;
+
+        // 5. Waste (kg CO2 per year)
+        let wasteScore = 0;
+        if (formData.waste.plasticUsage === "High") wasteScore += 400;
+        else if (formData.waste.plasticUsage === "Medium") wasteScore += 200;
+        else if (formData.waste.plasticUsage === "Low") wasteScore += 50;
+
+        if (formData.waste.recycling === "Never") wasteScore += 300;
+        else if (formData.waste.recycling === "Sometimes") wasteScore += 150;
+
+        // Total emissions in kg CO2
+        const totalEmissions = Math.round(transportScore + energyScore + foodScore + shoppingScore + wasteScore);
+        
+        // Sustainability score: A footprint of 2000 kg (2 tons) is excellent (score 80). 10000 kg is very poor (score 0).
+        // Formula: 100 - (totalEmissions / 100)
+        const sustainabilityScore = Math.max(0, Math.min(100, Math.round(100 - (totalEmissions / 100))));
+
+        addAssessment({
+          transportScore,
+          energyScore,
+          foodScore,
+          shoppingScore,
+          wasteScore,
+          totalEmissions,
+          sustainabilityScore
+        });
+        
         router.push("/dashboard");
       } catch (error) {
-        console.error(error);
+        logger.error("Failed to complete onboarding", error);
         alert("Failed to save assessment. Please try again.");
         setLoading(false);
       }

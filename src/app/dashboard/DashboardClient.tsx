@@ -11,6 +11,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,15 +33,27 @@ import {
   Droplets,
   TreePine,
   Zap,
-  Car,
-  ShoppingBag,
-  Trash2,
-  CheckCircle2,
   Award,
   ArrowUpCircle,
 } from "lucide-react";
 import { format } from "date-fns";
-import { logDailyAction } from "@/app/actions";
+import { useStore } from "@/lib/store";
+
+interface DashboardProps {
+  assessment: {
+    transportScore: number;
+    energyScore: number;
+    foodScore: number;
+    shoppingScore: number;
+    wasteScore: number;
+    totalEmissions: number;
+    sustainabilityScore: number;
+  };
+  historicalAssessments: Array<{ createdAt: string; totalEmissions: number; sustainabilityScore: number }>;
+  recommendations: Array<{ id: string; recommendation: string; estimatedSavings: number }>;
+  metrics: { totalCarbonSaved: number; treesEquivalent: number; waterSaved: number };
+  user: { level: number; xp: number; dailyLogs?: Array<{ walkingKm?: number; plasticSaved?: number }>; userChallenges?: Array<{ id: string; progress: number }> };
+}
 
 export default function DashboardClient({
   assessment,
@@ -48,8 +61,10 @@ export default function DashboardClient({
   recommendations,
   metrics,
   user,
-}: any) {
+}: DashboardProps) {
   const [logging, setLogging] = useState(false);
+  const addDailyLog = useStore((state) => state.addDailyLog);
+  
   const [logData, setLogData] = useState({
     walkingKm: 0,
     cyclingKm: 0,
@@ -57,18 +72,27 @@ export default function DashboardClient({
     plasticSaved: 0,
   });
 
-  const handleLogSubmit = async () => {
+  const handleLogSubmit = () => {
     setLogging(true);
     try {
-      await logDailyAction(logData);
-      alert("Successfully logged daily activity! +10 XP");
+      const carbonSaved = 
+        (logData.walkingKm * 0.15) + 
+        (logData.cyclingKm * 0.15) + 
+        (logData.plasticSaved * 0.08);
+
+      addDailyLog({
+        ...logData,
+        carbonSaved
+      });
+      alert("Successfully logged daily activity! +20 XP");
       setLogData({
         walkingKm: 0,
         cyclingKm: 0,
         publicTransportKm: 0,
         plasticSaved: 0,
       });
-    } catch (e) {
+    } catch (error) {
+      logger.error("Failed to share", error);
       alert("Error logging activity");
     }
     setLogging(false);
@@ -82,7 +106,7 @@ export default function DashboardClient({
     { name: "Waste", value: assessment.wasteScore, color: "#64748b" },
   ];
 
-  const lineData = historicalAssessments.map((a: any) => ({
+  const lineData = historicalAssessments.map((a: { createdAt: string; totalEmissions: number; sustainabilityScore: number }) => ({
     date: format(new Date(a.createdAt), "MMM dd"),
     Carbon: a.totalEmissions,
     Score: a.sustainabilityScore,
@@ -96,14 +120,14 @@ export default function DashboardClient({
 
   const totalWalked =
     user?.dailyLogs?.reduce(
-      (sum: number, log: any) => sum + (log.walkingKm || 0),
+      (sum: number, log: { walkingKm?: number }) => sum + (log.walkingKm || 0),
       0,
     ) || 0;
   const walkProgress = Math.min((totalWalked / 5) * 100, 100);
 
   const totalPlastic =
     user?.dailyLogs?.reduce(
-      (sum: number, log: any) => sum + (log.plasticSaved || 0),
+      (sum: number, log: { plasticSaved?: number }) => sum + (log.plasticSaved || 0),
       0,
     ) || 0;
   const plasticProgress = Math.min((totalPlastic / 10) * 100, 100);
@@ -174,12 +198,12 @@ export default function DashboardClient({
           <div className="col-span-1 md:col-span-3 lg:col-span-2 grid grid-cols-2 gap-4">
             <Card className="rounded-3xl border-none shadow-md">
               <CardHeader className="pb-2">
-                <CardDescription>Monthly Footprint</CardDescription>
+                <CardDescription>Annual Footprint</CardDescription>
                 <CardTitle className="text-3xl font-poppins flex items-center gap-2">
                   <Zap className="w-6 h-6 text-yellow-500" />
                   {assessment.totalEmissions}{" "}
                   <span className="text-base font-normal text-slate-500">
-                    kg CO₂
+                    kg CO₂/year
                   </span>
                 </CardTitle>
               </CardHeader>
@@ -224,7 +248,10 @@ export default function DashboardClient({
               <CardTitle>Emission Breakdown</CardTitle>
             </CardHeader>
             <CardContent className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+              <div className="sr-only">
+                A pie chart showing the emission breakdown. Transport is {assessment.transportScore}, Energy is {assessment.energyScore}, Food is {assessment.foodScore}, Shopping is {assessment.shoppingScore}, Waste is {assessment.wasteScore}.
+              </div>
+              <ResponsiveContainer width="100%" height="100%" aria-hidden="true">
                 <PieChart>
                   <Pie
                     data={pieData}
@@ -261,7 +288,10 @@ export default function DashboardClient({
               <CardTitle>Impact Trend</CardTitle>
             </CardHeader>
             <CardContent className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+              <div className="sr-only">
+                A line chart showing your impact trend over time. It compares total emissions with sustainability score across historical assessments.
+              </div>
+              <ResponsiveContainer width="100%" height="100%" aria-hidden="true">
                 <LineChart
                   data={lineData}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -304,7 +334,7 @@ export default function DashboardClient({
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {recommendations.length > 0 ? (
-                  recommendations.map((rec: any) => (
+                  recommendations.map((rec: { id: string; recommendation: string; estimatedSavings: number }) => (
                     <div
                       key={rec.id}
                       className="p-5 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow"

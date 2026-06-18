@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { Leaf, Activity, Trophy, ArrowRight, Zap, Target } from "lucide-react";
+import { Leaf, Activity, Trophy, ArrowRight, Zap } from "lucide-react";
 
 export default function LandingPage() {
   return (
@@ -19,11 +19,7 @@ export default function LandingPage() {
           </span>
         </div>
         <div className="flex gap-4">
-          <Link href="/sign-in">
-            <Button variant="ghost" className="text-slate-900 dark:text-white">
-              Sign In
-            </Button>
-          </Link>
+
           <Link href="/onboarding">
             <Button className="bg-green-600 hover:bg-green-700 text-white rounded-full">
               Get Started

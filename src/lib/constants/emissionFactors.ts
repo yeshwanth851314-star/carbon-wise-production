@@ -1,0 +1,26 @@
+export const EMISSION_FACTORS = {
+  TRANSPORT: {
+    CAR_WEIGHT: 0.6,
+    TRANSIT_WEIGHT: 0.2,
+    BIKE_WEIGHT: 0.2,
+    EV_SAVINGS_MULTIPLIER: 0.5,
+  },
+  ENERGY: {
+    AC_WEIGHT: 0.3,
+    ELEC_WEIGHT: 0.7,
+    RENEWABLE_SAVINGS_MULTIPLIER: 0.8,
+  },
+  FOOD: {
+    MEAT_WEIGHT: 0.6,
+    VEG_SAVINGS_MULTIPLIER: 0.4,
+  },
+  WASTE: {
+    PLASTIC_WEIGHT: 0.5,
+    RECYCLE_WEIGHT: 0.5,
+  },
+  EQUIVALENTS: {
+    TREES_PLANTED_PER_KG: 1 / 25, // 25 kg per tree
+    KM_AVOIDED_PER_KG: 1 / 0.192, // 0.192 kg per km
+    LED_HOURS_PER_KG: 1 / 0.015, // 0.015 kg per hour
+  }
+};
