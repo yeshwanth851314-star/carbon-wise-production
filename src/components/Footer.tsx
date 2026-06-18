@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FileText, Shield, Code } from 'lucide-react';
+import { FileText, Shield } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -26,15 +26,6 @@ export default function Footer() {
               <FileText className="w-4 h-4" />
               Terms of Use
             </Link>
-            <a 
-              href="https://github.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="hover:text-green-600 dark:hover:text-green-500 transition-colors flex items-center gap-1.5"
-            >
-              <Code className="w-4 h-4" />
-              GitHub Repository
-            </a>
           </div>
         </div>
         <div className="mt-6 text-center text-xs text-slate-500 dark:text-slate-500">
