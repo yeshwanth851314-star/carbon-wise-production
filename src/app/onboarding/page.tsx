@@ -371,8 +371,14 @@ export default function Onboarding() {
           <CardFooter className="flex justify-between mt-4 border-t pt-6 border-slate-100 dark:border-slate-800">
             <Button
               variant="outline"
-              onClick={() => setStep(step - 1)}
-              disabled={step === 0 || loading}
+              onClick={() => {
+                if (step === 0) {
+                  router.push("/");
+                } else {
+                  setStep(step - 1);
+                }
+              }}
+              disabled={loading}
             >
               <ArrowLeft className="w-4 h-4 mr-2" /> Back
             </Button>
