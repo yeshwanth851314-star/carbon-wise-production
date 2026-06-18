@@ -34,8 +34,7 @@ describe('SustainabilityReport Component', () => {
         projectedFootprint: 400,
         reductionAmount: 100,
         reductionPercentage: 20,
-        biggestImpactAction: 'Reduce Car Usage',
-        impactMap: [{ name: 'Reduce Car Usage', saving: 50 }]
+        biggestImpactAction: 'Reduce Car Usage'
       },
       level: 4,
       xp: 420,

@@ -16,6 +16,7 @@ export const metadata: Metadata = {
 };
 
 import VideoBackground from "@/components/VideoBackground";
+import Footer from "@/components/Footer";
 
 export default function RootLayout({
   children,
@@ -28,7 +29,10 @@ export default function RootLayout({
         className={`${inter.variable} ${poppins.variable} font-sans antialiased bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-50`}
       >
         <VideoBackground />
-        <div className="relative z-10">{children}</div>
+        <div className="relative z-10 flex flex-col min-h-screen">
+          <main className="flex-grow">{children}</main>
+          <Footer />
+        </div>
       </body>
     </html>
   );
