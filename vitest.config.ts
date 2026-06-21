@@ -14,12 +14,19 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
+      include: ['src/lib/**/*.ts'],
       exclude: [
         'node_modules/',
         'vitest.setup.ts',
         '.next/',
         '**/*.d.ts',
       ],
+      thresholds: {
+        lines: 85,
+        statements: 85,
+        functions: 85,
+        branches: 70
+      }
     },
   },
 })

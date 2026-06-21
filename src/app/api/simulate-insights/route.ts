@@ -5,7 +5,7 @@ import { logger } from "@/lib/logger";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
-// In-memory rate limiting map for Hackathon purposes
+// In-memory rate limiting map for basic protection
 const rateLimitMap = new Map<string, { count: number, timestamp: number }>();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 5; // max 5 requests per minute

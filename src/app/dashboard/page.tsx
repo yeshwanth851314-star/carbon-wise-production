@@ -83,7 +83,7 @@ export default function DashboardPage() {
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-2">
               <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md">
-                ✨ New Hackathon Feature
+                ✨ New AI Simulator Feature
               </span>
             </div>
             <h2 className="text-2xl font-poppins font-bold mb-2">AI Carbon Reduction Simulator</h2>

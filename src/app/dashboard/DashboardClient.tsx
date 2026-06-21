@@ -38,6 +38,10 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useStore } from "@/lib/store";
+import { BenchmarkComparison } from "@/components/BenchmarkComparison";
+import { CommunityBenchmark } from "@/components/CommunityBenchmark";
+import { SustainabilityTwin } from "@/components/SustainabilityTwin";
+import { CollectiveImpact } from "@/components/CollectiveImpact";
 
 interface DashboardProps {
   assessment: {
@@ -71,6 +75,8 @@ export default function DashboardClient({
     publicTransportKm: 0,
     plasticSaved: 0,
   });
+
+  const simulationResult = useStore((state) => state.simulationResult);
 
   const handleLogSubmit = () => {
     setLogging(true);
@@ -321,6 +327,11 @@ export default function DashboardClient({
             </CardContent>
           </Card>
 
+          <div className="col-span-1 md:col-span-3 space-y-6">
+            <BenchmarkComparison footprint={assessment.totalEmissions} />
+            <CommunityBenchmark userScore={assessment.sustainabilityScore} userFootprint={assessment.totalEmissions} />
+          </div>
+
           <Card className="col-span-1 md:col-span-3 border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-900/10 rounded-3xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
@@ -357,6 +368,17 @@ export default function DashboardClient({
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+          <SustainabilityTwin 
+            currentFootprint={assessment.totalEmissions}
+            simulatedFootprint={simulationResult?.projectedFootprint ?? null}
+            biggestImpactAction={simulationResult?.biggestImpactAction ?? null}
+          />
+          <CollectiveImpact 
+            annualReduction={simulationResult?.reductionAmount ?? 0}
+          />
         </div>
       </TabsContent>
 

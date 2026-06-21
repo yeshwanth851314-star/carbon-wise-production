@@ -29,7 +29,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-6 text-center text-xs text-slate-500 dark:text-slate-500">
-          &copy; {new Date().getFullYear()} CarbonWise AI. Built for the Hackathon.
+          &copy; {new Date().getFullYear()} CarbonWise AI. All rights reserved.
         </div>
       </div>
     </footer>

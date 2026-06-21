@@ -32,9 +32,16 @@ import { SustainabilityReportGenerator } from "@/components/SustainabilityReport
 import { 
   calculateProjectedFootprint, 
   calculateForecast, 
-  calculateImpactEquivalents, 
   calculateAchievementUnlocks 
 } from "@/lib/carbon/simulator";
+import { 
+  calculateSustainabilityTier, 
+  calculatePercentileEstimate, 
+  TIERS 
+} from "@/lib/carbon/benchmarks";
+import { EnvironmentalEquivalents } from "@/components/EnvironmentalEquivalents";
+import { SustainabilityTwin } from "@/components/SustainabilityTwin";
+import { CollectiveImpact } from "@/components/CollectiveImpact";
 import { logger } from "@/lib/logger";
 
 // Debounce helper
@@ -117,6 +124,16 @@ export default function SimulatorPage() {
   // Forecasts
   const { sixMonthForecast, oneYearForecast } = calculateForecast(projectedFootprint);
 
+  // Benchmarks & Tiers
+  const currentTier = useMemo(() => calculateSustainabilityTier(baseEmissions), [baseEmissions]);
+  const projectedTier = useMemo(() => calculateSustainabilityTier(projectedFootprint), [projectedFootprint]);
+  const currentPercentile = useMemo(() => calculatePercentileEstimate(baseEmissions), [baseEmissions]);
+  const projectedPercentile = useMemo(() => calculatePercentileEstimate(projectedFootprint), [projectedFootprint]);
+
+  const currentTierIndex = TIERS.findIndex(t => t.name === currentTier.name);
+  const projectedTierIndex = TIERS.findIndex(t => t.name === projectedTier.name);
+  const tierImprovement = currentTierIndex - projectedTierIndex; // Higher is better (lower index)
+
   // Gamification Unlocks
   useEffect(() => {
     const unlocks = calculateAchievementUnlocks(reductionPercentage);
@@ -170,9 +187,6 @@ export default function SimulatorPage() {
     { name: "6 Months", value: sixMonthForecast, fill: "#22c55e" },
     { name: "1 Year", value: oneYearForecast, fill: "#16a34a" },
   ];
-
-  // Equivalents
-  const { treesPlanted, kmAvoided, ledHours } = calculateImpactEquivalents(reductionAmount);
 
   const applyPreset = (preset: string) => {
     setSwitchEV(false); setRenewableEnergy(false); setSwitchVeg(false);
@@ -319,6 +333,40 @@ export default function SimulatorPage() {
             </motion.div>
           </div>
 
+          {/* Tier Progress & Benchmark Position */}
+          <Card className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-lg border-none">
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex-1 w-full">
+                  <p className="text-sm text-slate-500 uppercase font-bold mb-2">Tier Progress</p>
+                  <div className="flex items-center gap-3">
+                    <Badge className={`${currentTier.color} text-white border-none shadow-sm`}>{currentTier.name}</Badge>
+                    <span className="text-slate-400">→</span>
+                    <Badge className={`${projectedTier.color} text-white border-none shadow-sm`}>{projectedTier.name}</Badge>
+                  </div>
+                </div>
+                <div className="flex-1 w-full text-left md:text-right">
+                  <p className="text-sm text-slate-500 uppercase font-bold mb-2">Global Percentile</p>
+                  <div className="flex items-center md:justify-end gap-2 font-bold">
+                    <span className="text-slate-500 line-through text-lg">Top {100 - currentPercentile}%</span>
+                    <span className="text-green-500 text-2xl">Top {100 - projectedPercentile}%</span>
+                  </div>
+                </div>
+              </div>
+              <AnimatePresence>
+                {tierImprovement > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 rounded-lg text-sm font-medium flex items-center gap-2"
+                  >
+                    🌟 Improvement: You move up {tierImprovement === 1 ? 'one sustainability tier' : `${tierImprovement} sustainability tiers`}!
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </CardContent>
+          </Card>
+
           {/* Biggest Impact Change Banner */}
           <AnimatePresence mode="popLayout">
             {biggestImpactAction && (
@@ -344,51 +392,17 @@ export default function SimulatorPage() {
             )}
           </AnimatePresence>
 
-          {/* Impact Equivalents */}
-          <div className="grid grid-cols-3 gap-4">
-            <Card className="bg-white/80 dark:bg-slate-900/80 shadow-lg border-none">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-3 bg-green-100 rounded-full text-green-600"><TreePine className="w-6 h-6" /></div>
-                <div><p className="text-2xl font-bold">{treesPlanted}</p><p className="text-xs text-slate-500">Trees Planted</p></div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white/80 dark:bg-slate-900/80 shadow-lg border-none">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-full text-blue-600"><Car className="w-6 h-6" /></div>
-                <div><p className="text-2xl font-bold">{kmAvoided}</p><p className="text-xs text-slate-500">Car km Avoided</p></div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white/80 dark:bg-slate-900/80 shadow-lg border-none">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-3 bg-yellow-100 rounded-full text-yellow-600"><Lightbulb className="w-6 h-6" /></div>
-                <div><p className="text-2xl font-bold">{ledHours}</p><p className="text-xs text-slate-500">LED Hours</p></div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Sustainability Twin */}
+          <SustainabilityTwin 
+            currentFootprint={baseEmissions}
+            simulatedFootprint={projectedFootprint}
+            biggestImpactAction={biggestImpactAction?.name ?? null}
+          />
 
-          {/* Before vs After Animated Impact Chart */}
-          <Card className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-lg border-none">
-            <CardHeader><CardTitle>Carbon Footprint Forecast</CardTitle></CardHeader>
-            <CardContent className="h-[250px] w-full">
-              <div className="sr-only">
-                A bar chart showing your carbon footprint forecast. Your current footprint is {baseEmissions} kg CO2. Your projected footprint based on selected changes is {projectedFootprint} kg CO2. 6 months forecast is {sixMonthForecast} kg CO2. 1 year forecast is {oneYearForecast} kg CO2.
-              </div>
-              <ResponsiveContainer width="100%" height="100%" aria-hidden="true">
-                <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} className="font-bold text-sm" />
-                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]} animationDuration={1000}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <LabelList dataKey="value" position="right" formatter={(val: any) => `${val} kg`} className="font-bold text-xs" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          {/* Collective Impact */}
+          <CollectiveImpact 
+            annualReduction={reductionAmount}
+          />
 
           {/* AI 7-Day Action Plan */}
           <Card className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-lg border-none">

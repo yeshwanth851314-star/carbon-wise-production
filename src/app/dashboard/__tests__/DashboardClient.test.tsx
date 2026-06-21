@@ -64,10 +64,10 @@ describe('DashboardClient Component', () => {
     );
     
     // Check if score is rendered
-    expect(screen.getByText('85')).toBeInTheDocument();
-    
+    expect(screen.getAllByText('85').length).toBeGreaterThan(0);
+
     // Check if emissions are rendered
-    expect(screen.getByText('500')).toBeInTheDocument();
+    expect(screen.getAllByText('500').length).toBeGreaterThan(0);
     
     // Check if recommendation is rendered
     expect(screen.getByText('Do this')).toBeInTheDocument();

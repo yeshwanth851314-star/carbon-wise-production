@@ -5,9 +5,18 @@ import { useStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { 
   Share2, Award, Zap, Leaf, TreePine, TrendingDown,
-  Trophy, Target, Star
+  Trophy, Target, Star, Globe, Car, Lightbulb, Home, Plane, Droplets
 } from "lucide-react";
 import { logger } from "@/lib/logger";
+import {
+  calculateBenchmarkComparison,
+  calculateSustainabilityTier,
+  calculatePercentileEstimate,
+  generateBenchmarkInsights
+} from "@/lib/carbon/benchmarks";
+import { calculateEnvironmentalEquivalents } from "@/lib/carbon/equivalents";
+import { generatePersonalizedTwin } from "@/lib/carbon/futureTwin";
+import { generateCollectiveImpact } from "@/lib/carbon/collectiveImpact";
 import {
   BarChart,
   Bar,
@@ -95,6 +104,26 @@ export function SustainabilityReportGenerator() {
   const completedChallenges = store.userChallenges.filter(c => c.completed).length;
   const completionRate = totalChallenges > 0 ? Math.round((completedChallenges / totalChallenges) * 100) : 0;
   const carbonSavedChallenges = store.userChallenges.filter(c => c.completed).reduce((sum, c) => sum + c.challenge.carbonTarget, 0);
+
+  // Benchmarks
+  const currentTier = calculateSustainabilityTier(assessment.totalEmissions);
+  const currentPercentile = calculatePercentileEstimate(assessment.totalEmissions);
+  const benchmarkInsight = generateBenchmarkInsights(assessment.totalEmissions);
+  const comparisons = calculateBenchmarkComparison(assessment.totalEmissions);
+
+  const benchmarkChartData = [
+    { name: "You", value: assessment.totalEmissions, fill: "#3b82f6" },
+    { name: "Sustainable", value: comparisons.sustainableTarget.value, fill: "#10b981" },
+    { name: "India Avg", value: comparisons.indianAverage.value, fill: "#f59e0b" },
+    { name: "Global Avg", value: comparisons.globalAverage.value, fill: "#ef4444" }
+  ];
+
+  // Equivalents
+  const reductionEquivalents = calculateEnvironmentalEquivalents(sim.reductionAmount);
+
+  const twinData = generatePersonalizedTwin(assessment.totalEmissions, sim.projectedFootprint, sim.biggestImpactAction);
+  const collectiveData = generateCollectiveImpact(sim.reductionAmount);
+  const collective100k = collectiveData.scenarios[100000];
 
   // Charts Data
   const sixMonthForecast = Math.max(0, Math.round(sim.projectedFootprint * 0.9));
@@ -231,7 +260,84 @@ export function SustainabilityReportGenerator() {
             </div>
           </div>
 
-          {/* 3. Charts Section */}
+          {/* 3. Global Impact Comparison */}
+          <h2 className="text-2xl font-bold font-poppins text-slate-800 mb-4 border-b pb-2 flex items-center gap-2"><Globe className="text-blue-500" /> Global Impact Comparison</h2>
+          <div className="grid grid-cols-2 gap-6 mb-8">
+            <div className="border border-slate-200 rounded-2xl p-6 bg-white shadow-sm">
+              <h3 className="text-sm font-bold text-slate-500 uppercase mb-4 text-center">Benchmark Chart</h3>
+              <div className="flex justify-center">
+                <BarChart width={300} height={180} data={benchmarkChartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} className="font-bold text-[10px]" width={60} />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} isAnimationActive={false}>
+                    {benchmarkChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    <LabelList dataKey="value" position="right" formatter={(val: any) => `${val}`} className="font-bold text-[10px]" />
+                  </Bar>
+                </BarChart>
+              </div>
+            </div>
+
+            <div className="border border-slate-200 rounded-2xl p-6 bg-white shadow-sm flex flex-col justify-center">
+              <div className="mb-4">
+                <span className="text-sm text-slate-500 uppercase font-bold">Sustainability Tier</span>
+                <p className={`text-xl font-bold ${currentTier.textColor}`}>{currentTier.name}</p>
+              </div>
+              <div className="mb-4">
+                <span className="text-sm text-slate-500 uppercase font-bold">Global Percentile</span>
+                <p className="text-xl font-bold text-slate-800">Top {100 - currentPercentile}%</p>
+              </div>
+              <div className={`p-3 rounded-lg border ${
+                  benchmarkInsight.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+                  benchmarkInsight.type === 'info' ? 'bg-blue-50 border-blue-200 text-blue-800' :
+                  'bg-yellow-50 border-yellow-200 text-yellow-800'
+                }`}>
+                <p className="font-bold text-sm mb-1">{benchmarkInsight.title}</p>
+                <p className="text-xs">{benchmarkInsight.message}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Environmental Equivalents */}
+          <h2 className="text-2xl font-bold font-poppins text-slate-800 mb-4 border-b pb-2 flex items-center gap-2">
+            <TreePine className="text-emerald-500" /> Environmental Impact
+          </h2>
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex flex-col items-center text-center">
+              <TreePine className="w-6 h-6 text-emerald-500 mb-2" />
+              <p className="text-xl font-bold text-emerald-700">{reductionEquivalents.treesEquivalent}</p>
+              <p className="text-xs text-emerald-600 font-bold uppercase">Trees Planted</p>
+            </div>
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col items-center text-center">
+              <Car className="w-6 h-6 text-slate-500 mb-2" />
+              <p className="text-xl font-bold text-slate-700">{reductionEquivalents.drivingEquivalent}</p>
+              <p className="text-xs text-slate-500 font-bold uppercase">km Driving</p>
+            </div>
+            <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex flex-col items-center text-center">
+              <Lightbulb className="w-6 h-6 text-amber-500 mb-2" />
+              <p className="text-xl font-bold text-amber-700">{reductionEquivalents.electricityEquivalent}</p>
+              <p className="text-xs text-amber-600 font-bold uppercase">LED Hours</p>
+            </div>
+            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex flex-col items-center text-center">
+              <Home className="w-6 h-6 text-indigo-500 mb-2" />
+              <p className="text-xl font-bold text-indigo-700">{reductionEquivalents.householdEnergyEquivalent}</p>
+              <p className="text-xs text-indigo-600 font-bold uppercase">Months Power</p>
+            </div>
+            <div className="bg-sky-50 p-4 rounded-xl border border-sky-100 flex flex-col items-center text-center">
+              <Plane className="w-6 h-6 text-sky-500 mb-2" />
+              <p className="text-xl font-bold text-sky-700">{reductionEquivalents.flightsEquivalent}</p>
+              <p className="text-xs text-sky-600 font-bold uppercase">Flights Avoided</p>
+            </div>
+            <div className="bg-cyan-50 p-4 rounded-xl border border-cyan-100 flex flex-col items-center text-center">
+              <Droplets className="w-6 h-6 text-cyan-500 mb-2" />
+              <p className="text-xl font-bold text-cyan-700">{reductionEquivalents.waterEquivalent}</p>
+              <p className="text-xs text-cyan-600 font-bold uppercase">Liters Water</p>
+            </div>
+          </div>
+
+          {/* 5. Analytics */}
           <h2 className="text-2xl font-bold font-poppins text-slate-800 mb-4 border-b pb-2">Analytics</h2>
           <div className="grid grid-cols-2 gap-6 mb-8">
             <div className="border border-slate-200 rounded-2xl p-6 bg-white shadow-sm">
@@ -275,8 +381,55 @@ export function SustainabilityReportGenerator() {
             </div>
           </div>
 
+          {/* 3. Future Sustainability Twin & Collective Impact */}
+          <h2 className="text-2xl font-bold font-poppins text-slate-800 mb-4 border-b pb-2 flex items-center gap-2 mt-8"><Globe className="text-blue-500" /> Future Sustainability Twin</h2>
+          <div className="grid grid-cols-3 gap-6 mb-8">
+            <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50">
+              <h3 className="font-bold text-slate-800 mb-1">{twinData.scenarios.scenarioA.name}</h3>
+              <p className="text-xs text-slate-500 mb-4">{twinData.scenarios.scenarioA.description}</p>
+              <p className="text-xs uppercase font-bold text-slate-400">2035 Projection</p>
+              <p className="text-2xl font-bold text-slate-700">{twinData.scenarios.scenarioA.footprint2035} <span className="text-xs">kg</span></p>
+            </div>
+            <div className="border border-blue-200 rounded-2xl p-4 bg-blue-50">
+              <h3 className="font-bold text-blue-800 mb-1">{twinData.scenarios.scenarioB.name}</h3>
+              <p className="text-xs text-blue-600/80 mb-4">{twinData.scenarios.scenarioB.description}</p>
+              <p className="text-xs uppercase font-bold text-blue-400">2035 Projection</p>
+              <p className="text-2xl font-bold text-blue-700">{twinData.scenarios.scenarioB.footprint2035} <span className="text-xs">kg</span></p>
+            </div>
+            <div className="border border-orange-200 rounded-2xl p-4 bg-orange-50">
+              <h3 className="font-bold text-orange-800 mb-1">{twinData.scenarios.scenarioC.name}</h3>
+              <p className="text-xs text-orange-600/80 mb-4">{twinData.scenarios.scenarioC.description}</p>
+              <p className="text-xs uppercase font-bold text-orange-400">2035 Projection</p>
+              <p className="text-2xl font-bold text-orange-700">{twinData.scenarios.scenarioC.footprint2035} <span className="text-xs">kg</span></p>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-bold font-poppins text-slate-800 mb-4 border-b pb-2 flex items-center gap-2"><Target className="text-purple-500" /> Community Climate Impact (100,000 Users)</h2>
+          <div className="grid grid-cols-4 gap-4 mb-8">
+            <div className="bg-green-50 p-4 rounded-xl border border-green-100 flex flex-col items-center text-center">
+              <TreePine className="text-green-600 w-8 h-8 mb-2" />
+              <p className="text-xs text-green-800 font-bold uppercase">Trees Planted</p>
+              <p className="text-xl font-bold text-green-700">{new Intl.NumberFormat('en-US').format(collective100k.equivalents.treesEquivalent)}</p>
+            </div>
+            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex flex-col items-center text-center">
+              <Car className="text-blue-600 w-8 h-8 mb-2" />
+              <p className="text-xs text-blue-800 font-bold uppercase">Cars Removed</p>
+              <p className="text-xl font-bold text-blue-700">{new Intl.NumberFormat('en-US').format(Math.round(collective100k.totalCO2Reduced / 4600))}</p>
+            </div>
+            <div className="bg-cyan-50 p-4 rounded-xl border border-cyan-100 flex flex-col items-center text-center">
+              <Droplets className="text-cyan-600 w-8 h-8 mb-2" />
+              <p className="text-xs text-cyan-800 font-bold uppercase">Water Saved</p>
+              <p className="text-xl font-bold text-cyan-700">{new Intl.NumberFormat('en-US').format(collective100k.equivalents.waterEquivalent)}L</p>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 flex flex-col items-center text-center">
+              <Zap className="text-purple-600 w-8 h-8 mb-2" />
+              <p className="text-xs text-purple-800 font-bold uppercase">Total CO₂</p>
+              <p className="text-xl font-bold text-purple-700">{new Intl.NumberFormat('en-US').format(Math.round(collective100k.totalCO2Reduced / 1000))} tons</p>
+            </div>
+          </div>
+
           {/* 4. Personalized Commitment */}
-          <div className="bg-blue-50 rounded-2xl p-6 mb-8 border border-blue-100">
+          <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-200">
             <p className="text-lg text-slate-700 italic font-medium leading-relaxed">
               &quot;Based on your simulator results, maintaining these habits could reduce your carbon footprint by approximately <span className="text-blue-600 font-bold">{sim.reductionAmount} kg CO₂</span> annually. 
               {sim.biggestImpactAction ? ` Your biggest opportunity comes from ${sim.biggestImpactAction}.` : ''} If sustained over the next year, your environmental impact would be equivalent to planting <span className="text-green-600 font-bold">{treesEquivalent} trees</span>.&quot;

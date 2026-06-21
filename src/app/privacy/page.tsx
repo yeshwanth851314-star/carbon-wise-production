@@ -94,7 +94,7 @@ export default function PrivacyPolicy() {
                   CarbonWise AI is an AI-powered sustainability platform designed to help users understand, track, and reduce their carbon footprint through personalized insights, sustainability simulations, and environmental impact reporting.
                 </p>
                 <p>
-                  We value your privacy and are committed to being transparent about how information is collected and used. This policy aligns with basic privacy best practices and India's Digital Personal Data Protection Act (DPDP Act, 2023). This project is currently a student/hackathon project and does not require authentication.
+                  We value your privacy and are committed to being transparent about how information is collected and used. This policy aligns with standard privacy best practices and India's Digital Personal Data Protection Act (DPDP Act, 2023). This platform currently operates on a local-first architecture and does not require centralized authentication profiles.
                 </p>
               </section>
 
