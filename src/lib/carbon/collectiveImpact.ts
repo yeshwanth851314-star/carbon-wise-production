@@ -1,11 +1,17 @@
 import { calculateEnvironmentalEquivalents, EnvironmentalEquivalents } from './equivalents';
 
+/**
+ * Represents the impact of a given number of users adopting a sustainable scenario.
+ */
 export interface CollectiveImpactScenario {
   usersCount: number;
   totalCO2Reduced: number; // kg
   equivalents: EnvironmentalEquivalents;
 }
 
+/**
+ * A mapped collection of collective impact scenarios for different population scales.
+ */
 export interface CollectiveImpact {
   baseReduction: number;
   scenarios: {

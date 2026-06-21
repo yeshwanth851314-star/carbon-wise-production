@@ -1,5 +1,9 @@
 import { calculateSustainabilityTier, TIERS } from "./benchmarks";
+import { calculateEmpiricalPercentile } from "./percentiles";
 
+/**
+ * Statistics regarding a user's standing within the CarbonWise community.
+ */
 export interface CommunityStats {
   averageScore: number;
   top10Score: number;
@@ -41,9 +45,7 @@ export function calculateCommunityRanking(userScore: number, communityScores: nu
   const top25Score = allScores[top25Index];
 
   // Calculate percentile
-  const scoresBelow = allScores.filter(s => s < userScore).length;
-  // If userScore is the highest, they are better than 99%
-  const userPercentile = Math.round((scoresBelow / allScores.length) * 100);
+  const userPercentile = calculateEmpiricalPercentile(userScore, allScores);
 
   let userRank: CommunityStats["userRank"] = "Bottom 50%";
   if (userScore >= top10Score) userRank = "Top 10%";
@@ -86,6 +88,9 @@ export function calculateCommunityInsights(stats: CommunityStats): string[] {
   return insights;
 }
 
+/**
+ * Represents the progress required to reach the next sustainability tier.
+ */
 export interface TierProgress {
   currentTier: string;
   nextTier: string | null;

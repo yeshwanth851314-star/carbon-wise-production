@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { calculateCommunityRanking, calculateCommunityInsights, calculateNextTierProgress } from '../community';
-import { TIERS } from '../benchmarks';
 
 describe('calculateCommunityRanking', () => {
   it('calculates rankings correctly for top 10%', () => {

@@ -12,17 +12,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { logger } from "@/lib/logger";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ArrowLeft, ArrowRight, Car, Leaf, ShoppingBag, Trash2, Utensils, Zap } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { TransportStep, EnergyStep, FoodStep, ShoppingStep, WasteStep } from "@/components/onboarding/OnboardingSteps";
 
 export default function Onboarding() {
   const router = useRouter();
@@ -40,184 +32,27 @@ export default function Onboarding() {
     {
       title: "Transportation",
       icon: <Car className="w-6 h-6 text-green-500" />,
-      content: (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Primary Vehicle Type</Label>
-            <Select
-              onValueChange={(val: string | null) =>
-                setFormData((f) => ({
-                  ...f,
-                  transport: { ...f.transport, vehicleType: val || "" },
-                }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select vehicle type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Gasoline Car">Gasoline Car</SelectItem>
-                <SelectItem value="Electric Vehicle">
-                  Electric Vehicle
-                </SelectItem>
-                <SelectItem value="Public Transit">Public Transit</SelectItem>
-                <SelectItem value="Bicycle/Walk">Bicycle / Walk</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Weekly Travel Distance (km)</Label>
-            <Input
-              type="number"
-              placeholder="e.g. 150"
-              onChange={(e) =>
-                setFormData((f) => ({
-                  ...f,
-                  transport: {
-                    ...f.transport,
-                    weeklyDistance: Number(e.target.value),
-                  },
-                }))
-              }
-            />
-          </div>
-        </div>
-      ),
+      content: <TransportStep formData={formData} setFormData={setFormData} />,
     },
     {
       title: "Energy Usage",
       icon: <Zap className="w-6 h-6 text-yellow-500" />,
-      content: (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Monthly Electricity Usage (kWh)</Label>
-            <Input
-              type="number"
-              placeholder="e.g. 300"
-              onChange={(e) =>
-                setFormData((f) => ({
-                  ...f,
-                  energy: {
-                    ...f.energy,
-                    monthlyElectricity: Number(e.target.value),
-                  },
-                }))
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Daily AC Usage (Hours)</Label>
-            <Input
-              type="number"
-              placeholder="e.g. 4"
-              onChange={(e) =>
-                setFormData((f) => ({
-                  ...f,
-                  energy: { ...f.energy, acUsageHours: Number(e.target.value) },
-                }))
-              }
-            />
-          </div>
-        </div>
-      ),
+      content: <EnergyStep formData={formData} setFormData={setFormData} />,
     },
     {
       title: "Food Habits",
       icon: <Utensils className="w-6 h-6 text-orange-500" />,
-      content: (
-        <div className="space-y-2">
-          <Label>Diet Type</Label>
-          <Select
-            onValueChange={(val: string | null) =>
-              setFormData((f) => ({ ...f, food: { dietType: val || "" } }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select diet" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Vegan">Vegan</SelectItem>
-              <SelectItem value="Vegetarian">Vegetarian</SelectItem>
-              <SelectItem value="Mixed">Mixed</SelectItem>
-              <SelectItem value="Heavy Meat">Heavy Meat</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      ),
+      content: <FoodStep formData={formData} setFormData={setFormData} />,
     },
     {
       title: "Shopping",
       icon: <ShoppingBag className="w-6 h-6 text-purple-500" />,
-      content: (
-        <div className="space-y-2">
-          <Label>Online/Retail Shopping Frequency</Label>
-          <Select
-            onValueChange={(val: string | null) =>
-              setFormData((f) => ({ ...f, shopping: { frequency: val || "" } }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select frequency" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Rarely">Rarely</SelectItem>
-              <SelectItem value="Monthly">Monthly</SelectItem>
-              <SelectItem value="Weekly">Weekly</SelectItem>
-              <SelectItem value="Frequent">
-                Frequent (Multiple times a week)
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      ),
+      content: <ShoppingStep formData={formData} setFormData={setFormData} />,
     },
     {
       title: "Waste & Recycling",
       icon: <Trash2 className="w-6 h-6 text-slate-500" />,
-      content: (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Recycling Habits</Label>
-            <Select
-              onValueChange={(val: string | null) =>
-                setFormData((f) => ({
-                  ...f,
-                  waste: { ...f.waste, recycling: val || "" },
-                }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select recycling habit" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Always">Always Recycle</SelectItem>
-                <SelectItem value="Sometimes">Sometimes</SelectItem>
-                <SelectItem value="Never">Never</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Single-Use Plastic Usage</Label>
-            <Select
-              onValueChange={(val: string | null) =>
-                setFormData((f) => ({
-                  ...f,
-                  waste: { ...f.waste, plasticUsage: val || "" },
-                }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select plastic usage" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="High">High</SelectItem>
-                <SelectItem value="Medium">Medium</SelectItem>
-                <SelectItem value="Low">Low</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      ),
+      content: <WasteStep formData={formData} setFormData={setFormData} />,
     },
   ];
 
@@ -253,39 +88,36 @@ export default function Onboarding() {
     } else {
       setLoading(true);
       try {
-        // Calculate scientifically realistic annual footprints (in kg CO2)
         const weeksInYear = 52;
         const daysInYear = 365;
 
-        // 1. Transport (kg CO2 per year)
+        // 1. Transport
         const distancePerYear = formData.transport.weeklyDistance * weeksInYear;
         let transportFactor = 0;
         if (formData.transport.vehicleType === "Gasoline Car") transportFactor = 0.192;
         else if (formData.transport.vehicleType === "Electric Vehicle") transportFactor = 0.053;
         else if (formData.transport.vehicleType === "Public Transit") transportFactor = 0.105;
-        else transportFactor = 0; // Bicycle/Walk
+        else transportFactor = 0;
         const transportScore = distancePerYear * transportFactor;
 
-        // 2. Energy (kg CO2 per year)
-        // Global average grid intensity ~ 0.475 kg CO2 per kWh
+        // 2. Energy
         const baseElectricity = formData.energy.monthlyElectricity * 12 * 0.475;
-        // Estimate AC usage: typical 1.5 kW AC unit running for X hours a day
         const acElectricity = formData.energy.acUsageHours * daysInYear * 1.5 * 0.475;
         const energyScore = baseElectricity + acElectricity;
 
-        // 3. Food (kg CO2 per year)
-        let foodScore = 2500; // Mixed average
+        // 3. Food
+        let foodScore = 2500;
         if (formData.food.dietType === "Heavy Meat") foodScore = 3300;
         else if (formData.food.dietType === "Vegetarian") foodScore = 1700;
         else if (formData.food.dietType === "Vegan") foodScore = 1500;
 
-        // 4. Shopping (kg CO2 per year)
-        let shoppingScore = 400; // Monthly average
+        // 4. Shopping
+        let shoppingScore = 400;
         if (formData.shopping.frequency === "Frequent") shoppingScore = 1200;
         else if (formData.shopping.frequency === "Weekly") shoppingScore = 800;
         else if (formData.shopping.frequency === "Rarely") shoppingScore = 200;
 
-        // 5. Waste (kg CO2 per year)
+        // 5. Waste
         let wasteScore = 0;
         if (formData.waste.plasticUsage === "High") wasteScore += 400;
         else if (formData.waste.plasticUsage === "Medium") wasteScore += 200;
@@ -294,11 +126,7 @@ export default function Onboarding() {
         if (formData.waste.recycling === "Never") wasteScore += 300;
         else if (formData.waste.recycling === "Sometimes") wasteScore += 150;
 
-        // Total emissions in kg CO2
         const totalEmissions = Math.round(transportScore + energyScore + foodScore + shoppingScore + wasteScore);
-        
-        // Sustainability score: A footprint of 2000 kg (2 tons) is excellent (score 80). 10000 kg is very poor (score 0).
-        // Formula: 100 - (totalEmissions / 100)
         const sustainabilityScore = Math.max(0, Math.min(100, Math.round(100 - (totalEmissions / 100))));
 
         addAssessment({

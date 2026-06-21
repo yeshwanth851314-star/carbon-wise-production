@@ -1,8 +1,8 @@
 'use client';
+/* eslint-disable react/no-unescaped-entities */
 
 import React from 'react';
 import { Shield, Clock, Info, Database, Lock, UserCheck, BookOpen, AlertCircle, Mail } from 'lucide-react';
-import Link from 'next/link';
 
 export default function PrivacyPolicy() {
   const currentDate = new Date().toLocaleDateString('en-US', { 

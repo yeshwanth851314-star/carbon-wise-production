@@ -34,89 +34,93 @@ export interface SimulationResult {
   impactMap: Impact[];
 }
 
-export function calculateProjectedFootprint(inputs: SimulationInputs): SimulationResult {
-  const {
-    baseEmissions,
-    carReduction,
-    publicTransit,
-    bikeUsage,
-    switchEV,
-    acReduction,
-    elecReduction,
-    renewableEnergy,
-    meatReduction,
-    switchVeg,
-    shoppingReduction,
-    plasticReduction,
-    recyclingIncrease,
-  } = inputs;
-
-  let newTrans = inputs.baseTrans ?? (baseEmissions * 0.3);
-  let newEnergy = inputs.baseEnergy ?? (baseEmissions * 0.3);
-  let newFood = inputs.baseFood ?? (baseEmissions * 0.2);
-  let newShop = inputs.baseShop ?? (baseEmissions * 0.1);
-  let newWaste = inputs.baseWaste ?? (baseEmissions * 0.1);
-
-  const impacts: Impact[] = [];
-
-  // Transport Math
-  const carSavings = (newTrans * EMISSION_FACTORS.TRANSPORT.CAR_WEIGHT) * (carReduction / 100);
+function calculateTransportImpact(baseTrans: number, inputs: SimulationInputs, impacts: Impact[]): number {
+  let newTrans = baseTrans;
+  const carSavings = (newTrans * EMISSION_FACTORS.TRANSPORT.CAR_WEIGHT) * (inputs.carReduction / 100);
   newTrans -= carSavings;
   if (carSavings > 0) impacts.push({ name: "Reduce Car Usage", saving: carSavings });
 
-  const transitSavings = (newTrans * EMISSION_FACTORS.TRANSPORT.TRANSIT_WEIGHT) * (publicTransit / 100);
+  const transitSavings = (newTrans * EMISSION_FACTORS.TRANSPORT.TRANSIT_WEIGHT) * (inputs.publicTransit / 100);
   newTrans -= transitSavings;
   if (transitSavings > 0) impacts.push({ name: "Public Transit", saving: transitSavings });
 
-  const bikeSavings = (newTrans * EMISSION_FACTORS.TRANSPORT.BIKE_WEIGHT) * (bikeUsage / 100);
+  const bikeSavings = (newTrans * EMISSION_FACTORS.TRANSPORT.BIKE_WEIGHT) * (inputs.bikeUsage / 100);
   newTrans -= bikeSavings;
   if (bikeSavings > 0) impacts.push({ name: "Biking/Walking", saving: bikeSavings });
 
-  if (switchEV) {
+  if (inputs.switchEV) {
     const evSavings = newTrans * EMISSION_FACTORS.TRANSPORT.EV_SAVINGS_MULTIPLIER;
     newTrans -= evSavings;
     impacts.push({ name: "Switch to EV", saving: evSavings });
   }
+  return newTrans;
+}
 
-  // Energy Math
-  const acSavings = (newEnergy * EMISSION_FACTORS.ENERGY.AC_WEIGHT) * (acReduction / 100);
+function calculateEnergyImpact(baseEnergy: number, inputs: SimulationInputs, impacts: Impact[]): number {
+  let newEnergy = baseEnergy;
+  const acSavings = (newEnergy * EMISSION_FACTORS.ENERGY.AC_WEIGHT) * (inputs.acReduction / 100);
   newEnergy -= acSavings;
   if (acSavings > 0) impacts.push({ name: "Reduce AC", saving: acSavings });
 
-  const elecSavings = (newEnergy * EMISSION_FACTORS.ENERGY.ELEC_WEIGHT) * (elecReduction / 100);
+  const elecSavings = (newEnergy * EMISSION_FACTORS.ENERGY.ELEC_WEIGHT) * (inputs.elecReduction / 100);
   newEnergy -= elecSavings;
   if (elecSavings > 0) impacts.push({ name: "Reduce Electricity", saving: elecSavings });
 
-  if (renewableEnergy) {
+  if (inputs.renewableEnergy) {
     const renSavings = newEnergy * EMISSION_FACTORS.ENERGY.RENEWABLE_SAVINGS_MULTIPLIER;
     newEnergy -= renSavings;
     impacts.push({ name: "Renewable Energy", saving: renSavings });
   }
+  return newEnergy;
+}
 
-  // Food Math
-  const meatSavings = (newFood * EMISSION_FACTORS.FOOD.MEAT_WEIGHT) * (meatReduction / 100);
+function calculateFoodImpact(baseFood: number, inputs: SimulationInputs, impacts: Impact[]): number {
+  let newFood = baseFood;
+  const meatSavings = (newFood * EMISSION_FACTORS.FOOD.MEAT_WEIGHT) * (inputs.meatReduction / 100);
   newFood -= meatSavings;
   if (meatSavings > 0) impacts.push({ name: "Reduce Meat", saving: meatSavings });
 
-  if (switchVeg) {
+  if (inputs.switchVeg) {
     const vegSavings = newFood * EMISSION_FACTORS.FOOD.VEG_SAVINGS_MULTIPLIER;
     newFood -= vegSavings;
     impacts.push({ name: "Vegetarian Diet", saving: vegSavings });
   }
+  return newFood;
+}
 
-  // Shopping Math
-  const shopSavings = newShop * (shoppingReduction / 100);
+function calculateWasteAndShopImpact(baseShop: number, baseWaste: number, inputs: SimulationInputs, impacts: Impact[]): { newShop: number, newWaste: number } {
+  let newShop = baseShop;
+  let newWaste = baseWaste;
+  
+  const shopSavings = newShop * (inputs.shoppingReduction / 100);
   newShop -= shopSavings;
   if (shopSavings > 0) impacts.push({ name: "Reduce Shopping", saving: shopSavings });
 
-  // Waste Math
-  const plasticSavings = (newWaste * EMISSION_FACTORS.WASTE.PLASTIC_WEIGHT) * (plasticReduction / 100);
+  const plasticSavings = (newWaste * EMISSION_FACTORS.WASTE.PLASTIC_WEIGHT) * (inputs.plasticReduction / 100);
   newWaste -= plasticSavings;
   if (plasticSavings > 0) impacts.push({ name: "Reduce Plastic", saving: plasticSavings });
 
-  const recycleSavings = (newWaste * EMISSION_FACTORS.WASTE.RECYCLE_WEIGHT) * (recyclingIncrease / 100);
+  const recycleSavings = (newWaste * EMISSION_FACTORS.WASTE.RECYCLE_WEIGHT) * (inputs.recyclingIncrease / 100);
   newWaste -= recycleSavings;
   if (recycleSavings > 0) impacts.push({ name: "Increase Recycling", saving: recycleSavings });
+
+  return { newShop, newWaste };
+}
+
+export function calculateProjectedFootprint(inputs: SimulationInputs): SimulationResult {
+  const { baseEmissions } = inputs;
+  const baseTrans = inputs.baseTrans ?? (baseEmissions * 0.3);
+  const baseEnergy = inputs.baseEnergy ?? (baseEmissions * 0.3);
+  const baseFood = inputs.baseFood ?? (baseEmissions * 0.2);
+  const baseShop = inputs.baseShop ?? (baseEmissions * 0.1);
+  const baseWaste = inputs.baseWaste ?? (baseEmissions * 0.1);
+
+  const impacts: Impact[] = [];
+
+  const newTrans = calculateTransportImpact(baseTrans, inputs, impacts);
+  const newEnergy = calculateEnergyImpact(baseEnergy, inputs, impacts);
+  const newFood = calculateFoodImpact(baseFood, inputs, impacts);
+  const { newShop, newWaste } = calculateWasteAndShopImpact(baseShop, baseWaste, inputs, impacts);
 
   const projected = Math.max(0, Math.round(newTrans + newEnergy + newFood + newShop + newWaste));
   const reductionAmount = baseEmissions - projected;
@@ -125,13 +129,7 @@ export function calculateProjectedFootprint(inputs: SimulationInputs): Simulatio
   impacts.sort((a, b) => b.saving - a.saving);
   const biggestImpactAction = impacts.length > 0 ? impacts[0] : null;
 
-  return {
-    projectedFootprint: projected,
-    reductionAmount,
-    reductionPercentage,
-    biggestImpactAction,
-    impactMap: impacts
-  };
+  return { projectedFootprint: projected, reductionAmount, reductionPercentage, biggestImpactAction, impactMap: impacts };
 }
 
 export function calculateForecast(projectedFootprint: number) {

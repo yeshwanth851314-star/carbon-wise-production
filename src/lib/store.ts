@@ -1,8 +1,11 @@
 import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
 import { assessmentSchema } from './validation/assessment'
 import { ValidationError } from './errors'
 
+/**
+ * Represents a user's carbon footprint assessment.
+ */
 export interface Assessment {
   id: string
   transportScore: number
@@ -15,6 +18,9 @@ export interface Assessment {
   createdAt: string
 }
 
+/**
+ * Represents a daily log of sustainable activities.
+ */
 export interface DailyLog {
   id: string
   date: string
@@ -25,6 +31,9 @@ export interface DailyLog {
   carbonSaved: number
 }
 
+/**
+ * An AI-generated recommendation for carbon footprint reduction.
+ */
 export interface Recommendation {
   id: string
   recommendation: string
@@ -33,6 +42,9 @@ export interface Recommendation {
   createdAt: string
 }
 
+/**
+ * A gamified challenge for the user to complete.
+ */
 export interface UserChallenge {
   id: string
   challenge: {

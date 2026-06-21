@@ -1,11 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import {
-  calculatePercentDifference,
-  calculateBenchmarkComparison,
-  calculateSustainabilityTier,
-  calculatePercentileEstimate,
-  generateBenchmarkInsights
-} from '../benchmarks';
+import { calculatePercentDifference, calculateBenchmarkComparison, calculateSustainabilityTier, generateBenchmarkInsights } from '../benchmarks';
+import { calculatePercentileEstimate } from '../percentiles';;
 import { AVERAGE_INDIAN, AVERAGE_GLOBAL, SUSTAINABLE_TARGET } from '../../constants/benchmarks';
 
 describe('Carbon Benchmarks Engine', () => {

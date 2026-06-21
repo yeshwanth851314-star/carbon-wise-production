@@ -7,6 +7,9 @@ import {
 
 export { AVERAGE_INDIAN, AVERAGE_GLOBAL, SUSTAINABLE_TARGET, TIERS };
 
+/**
+ * Represents the result of comparing a user's carbon footprint against a benchmark.
+ */
 export interface BenchmarkComparison {
   name: string;
   value: number;
@@ -16,6 +19,9 @@ export interface BenchmarkComparison {
   isLower: boolean;
 }
 
+/**
+ * Metadata for a sustainability tier representing a range of annual carbon footprints.
+ */
 export interface SustainabilityTier {
   name: string;
   min: number;
@@ -84,33 +90,7 @@ export function calculateSustainabilityTier(footprint: number): SustainabilityTi
   return tier;
 }
 
-/**
- * Estimates a sustainability percentile rank based on the user's footprint.
- * A higher percentile (e.g., 99) means a better (lower) carbon footprint.
- * 
- * @param footprint The user's annual carbon footprint in kg CO₂/year
- * @returns An integer representing the percentile rank (1 to 99)
- */
-export function calculatePercentileEstimate(footprint: number): number {
-  if (footprint <= 1000) return 99;
-  if (footprint <= 1500) {
-    // Range: 1000 - 1500 -> Percentile: 99 to 90
-    return Math.round(99 - ((footprint - 1000) / 500) * 9);
-  }
-  if (footprint <= 1900) {
-    // Range: 1500 - 1900 -> Percentile: 90 to 75
-    return Math.round(90 - ((footprint - 1500) / 400) * 15);
-  }
-  if (footprint <= 4700) {
-    // Range: 1900 - 4700 -> Percentile: 75 to 50
-    return Math.round(75 - ((footprint - 1900) / 2800) * 25);
-  }
-  if (footprint <= 10000) {
-    // Range: 4700 - 10000 -> Percentile: 50 to 1
-    return Math.max(1, Math.round(50 - ((footprint - 4700) / 5300) * 49));
-  }
-  return 1;
-}
+
 
 /**
  * Generates dynamic, rule-based local insights comparing the footprint to standard benchmarks.

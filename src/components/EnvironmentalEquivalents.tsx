@@ -21,10 +21,9 @@ export function EnvironmentalEquivalents({ kgCO2, title = "Environmental Impact 
     waterEquivalent: 0,
   });
 
-  const targetValues = calculateEnvironmentalEquivalents(kgCO2);
-
   // Animate the values on change
   useEffect(() => {
+    const targetValues = calculateEnvironmentalEquivalents(kgCO2);
     const duration = 1000;
     const steps = 30;
     const stepTime = duration / steps;

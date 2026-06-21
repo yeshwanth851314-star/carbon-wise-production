@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from 'react';
+import { ElementType, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
@@ -11,13 +11,68 @@ import { Globe2, Leaf, Trophy } from "lucide-react";
 interface SustainabilityTwinProps {
   currentFootprint: number;
   simulatedFootprint: number | null;
-  biggestImpactAction: string | null;
 }
 
-export function SustainabilityTwin({ currentFootprint, simulatedFootprint, biggestImpactAction }: SustainabilityTwinProps) {
+const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: Array<{color: string, name: string, value: number}>, label?: string }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-lg" role="tooltip">
+        <p className="font-bold text-slate-900 dark:text-white mb-2">{label}</p>
+        {payload.map((entry: {color: string, name: string, value: number}, index: number) => (
+          <div key={`item-${index}`} className="flex items-center gap-2 text-sm mb-1">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
+            <span className="text-slate-600 dark:text-slate-400">{entry.name}:</span>
+            <span className="font-semibold text-slate-900 dark:text-white">{entry.value} kg</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+const ScenarioCard = ({ scenario, icon: Icon, colorClass, highlight }: { scenario: FutureScenario, icon: ElementType, colorClass: string, highlight?: boolean }) => (
+  <div className={`p-5 rounded-xl border ${highlight ? 'border-green-500 bg-green-50 dark:bg-green-900/10' : 'border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50'}`}>
+    <div className="flex items-start justify-between mb-4">
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg ${colorClass}`}>
+          <Icon className="w-5 h-5" />
+        </div>
+        <div>
+          <h4 className="font-semibold text-slate-900 dark:text-white">{scenario.name}</h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{scenario.futurePercentile}</p>
+        </div>
+      </div>
+      <Badge variant={highlight ? "default" : "outline"} className={highlight ? "bg-green-600" : ""}>
+        {scenario.futureTier.name}
+      </Badge>
+    </div>
+    
+    <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 h-10 line-clamp-2">
+      {scenario.description}
+    </p>
+
+    <div className="flex justify-between items-end">
+      <div>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">2035 Projection</p>
+        <p className="text-2xl font-bold text-slate-900 dark:text-white">{scenario.footprint2035} <span className="text-sm font-normal text-slate-500">kg</span></p>
+      </div>
+      {scenario.estimatedCarbonSaved > 0 && (
+        <div className="text-right">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Total Saved</p>
+          <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+            {(scenario.estimatedCarbonSaved / 1000).toFixed(1)} tons
+          </p>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+export function SustainabilityTwin({ currentFootprint, simulatedFootprint }: SustainabilityTwinProps) {
   const twinData = useMemo(() => {
-    return generatePersonalizedTwin(currentFootprint, simulatedFootprint, biggestImpactAction);
-  }, [currentFootprint, simulatedFootprint, biggestImpactAction]);
+    return generatePersonalizedTwin(currentFootprint, simulatedFootprint);
+  }, [currentFootprint, simulatedFootprint]);
 
   const { scenarioA, scenarioB, scenarioC } = twinData.scenarios;
 
@@ -32,62 +87,6 @@ export function SustainabilityTwin({ currentFootprint, simulatedFootprint, bigge
       };
     });
   }, [scenarioA, scenarioB, scenarioC]);
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-lg" role="tooltip">
-          <p className="font-bold text-slate-900 dark:text-white mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <div key={`item-${index}`} className="flex items-center gap-2 text-sm mb-1">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
-              <span className="text-slate-600 dark:text-slate-400">{entry.name}:</span>
-              <span className="font-semibold text-slate-900 dark:text-white">{entry.value} kg</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const ScenarioCard = ({ scenario, icon: Icon, colorClass, highlight }: { scenario: FutureScenario, icon: any, colorClass: string, highlight?: boolean }) => (
-    <div className={`p-5 rounded-xl border ${highlight ? 'border-green-500 bg-green-50 dark:bg-green-900/10' : 'border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50'}`}>
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${colorClass}`}>
-            <Icon className="w-5 h-5" />
-          </div>
-          <div>
-            <h4 className="font-semibold text-slate-900 dark:text-white">{scenario.name}</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{scenario.futurePercentile}</p>
-          </div>
-        </div>
-        <Badge variant={highlight ? "default" : "outline"} className={highlight ? "bg-green-600" : ""}>
-          {scenario.futureTier.name}
-        </Badge>
-      </div>
-      
-      <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 h-10 line-clamp-2">
-        {scenario.description}
-      </p>
-
-      <div className="flex justify-between items-end">
-        <div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">2035 Projection</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{scenario.footprint2035} <span className="text-sm font-normal text-slate-500">kg</span></p>
-        </div>
-        {scenario.estimatedCarbonSaved > 0 && (
-          <div className="text-right">
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Total Saved</p>
-            <p className="text-sm font-semibold text-green-600 dark:text-green-400">
-              {(scenario.estimatedCarbonSaved / 1000).toFixed(1)} tons
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
 
   return (
     <Card className="w-full bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-slate-200 dark:border-slate-800 shadow-sm" aria-label="Future Sustainability Twin Dashboard">

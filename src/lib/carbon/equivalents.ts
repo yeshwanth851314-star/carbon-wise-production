@@ -1,3 +1,6 @@
+/**
+ * Real-world equivalents of a given carbon footprint for visualization purposes.
+ */
 export interface EnvironmentalEquivalents {
   treesEquivalent: number;
   drivingEquivalent: number; // km

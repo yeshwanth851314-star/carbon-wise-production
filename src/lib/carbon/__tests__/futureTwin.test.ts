@@ -13,9 +13,8 @@ describe('Future Twin Engine', () => {
   it('should generate personalized scenarios correctly', () => {
     const currentFootprint = 6000;
     const simulatedFootprint = 4500;
-    const biggestImpactAction = 'Drive Less';
 
-    const twin = generatePersonalizedTwin(currentFootprint, simulatedFootprint, biggestImpactAction);
+    const twin = generatePersonalizedTwin(currentFootprint, simulatedFootprint);
 
     // Scenario A (Current)
     expect(twin.scenarios.scenarioA.footprint2035).toBe(currentFootprint);
@@ -35,7 +34,7 @@ describe('Future Twin Engine', () => {
 
   it('should fallback to 5% reduction for Scenario B if no simulator data', () => {
     const currentFootprint = 5000;
-    const twin = generatePersonalizedTwin(currentFootprint, null, null);
+    const twin = generatePersonalizedTwin(currentFootprint, null);
 
     // 5% of 5000 is 250, so target should be 4750
     expect(twin.scenarios.scenarioB.footprint2035).toBe(4750);

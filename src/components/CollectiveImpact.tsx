@@ -12,6 +12,22 @@ interface CollectiveImpactProps {
 
 const USER_SCALE = [100, 1000, 10000, 100000];
 
+import { ElementType } from 'react';
+
+const MetricCard = ({ icon: Icon, title, value, unit, colorClass }: { icon: ElementType, title: string, value: number, unit?: string, colorClass: string }) => (
+  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 flex items-center gap-4">
+    <div className={`p-3 rounded-xl ${colorClass}`}>
+      <Icon className="w-6 h-6" />
+    </div>
+    <div>
+      <p className="text-xs text-slate-500 uppercase font-bold">{title}</p>
+      <p className="text-2xl font-bold text-slate-800 dark:text-white">
+        {new Intl.NumberFormat('en-US').format(value)}{unit && <span className="text-sm text-slate-500 ml-1">{unit}</span>}
+      </p>
+    </div>
+  </div>
+);
+
 export function CollectiveImpact({ annualReduction }: CollectiveImpactProps) {
   const [sliderIndex, setSliderIndex] = useState([3]); // Default to 100k
 
@@ -22,20 +38,6 @@ export function CollectiveImpact({ annualReduction }: CollectiveImpactProps) {
   }, [annualReduction]);
 
   const activeScenario = collectiveData.scenarios[activeUsersCount];
-
-  const MetricCard = ({ icon: Icon, title, value, unit, colorClass }: any) => (
-    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 flex items-center gap-4">
-      <div className={`p-3 rounded-xl ${colorClass}`}>
-        <Icon className="w-6 h-6" />
-      </div>
-      <div>
-        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{title}</p>
-        <p className="text-xl font-bold text-slate-900 dark:text-white">
-          {new Intl.NumberFormat('en-US').format(value)} <span className="text-sm font-normal text-slate-500">{unit}</span>
-        </p>
-      </div>
-    </div>
-  );
 
   return (
     <Card className="w-full bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-slate-200 dark:border-slate-800 shadow-sm" aria-label="Collective Climate Impact">

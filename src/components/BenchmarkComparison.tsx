@@ -19,12 +19,8 @@ import {
   Cell,
   LabelList
 } from "recharts";
-import {
-  calculateBenchmarkComparison,
-  calculateSustainabilityTier,
-  calculatePercentileEstimate,
-  generateBenchmarkInsights
-} from "@/lib/carbon/benchmarks";
+import { calculateBenchmarkComparison, calculateSustainabilityTier, generateBenchmarkInsights } from '@/lib/carbon/benchmarks';
+import { calculatePercentileEstimate } from '@/lib/carbon/percentiles';;
 import { Globe } from "lucide-react";
 
 interface BenchmarkComparisonProps {

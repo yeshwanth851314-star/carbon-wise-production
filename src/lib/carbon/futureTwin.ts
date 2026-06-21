@@ -1,12 +1,19 @@
-import { calculateSustainabilityTier, SustainabilityTier, calculatePercentileEstimate } from './benchmarks';
+import { calculateSustainabilityTier, SustainabilityTier } from './benchmarks';
+import { calculatePercentileEstimate } from './percentiles';;
 
 export const NET_ZERO_TARGET = 1000;
 
+/**
+ * Represents a single data point in a timeline, pairing a year with a carbon footprint value.
+ */
 export interface DataPoint {
   year: number;
   footprint: number;
 }
 
+/**
+ * Detailed projection of a future sustainability scenario based on user habits.
+ */
 export interface FutureScenario {
   id: 'scenario_a' | 'scenario_b' | 'scenario_c';
   name: string;
@@ -19,6 +26,9 @@ export interface FutureScenario {
   estimatedCarbonSaved: number; // Cumulative kg saved vs Scenario A by 2035
 }
 
+/**
+ * A collection of personalized scenarios representing the user's future sustainability.
+ */
 export interface PersonalizedTwin {
   scenarios: {
     scenarioA: FutureScenario;
@@ -74,28 +84,9 @@ function calculateCumulativeSavings(baseline: DataPoint[], trajectory: DataPoint
   return saved;
 }
 
-/**
- * Generates the personalized sustainability twin with three unique projection paths.
- * Learns from the user's interactive simulator adjustments to create Scenario B.
- * 
- * @param currentFootprint The user's current annual carbon footprint (kg CO₂)
- * @param simulatedFootprint The projected footprint from the user's simulator choices (kg CO₂ or null)
- * @param biggestImpactAction The name of the highest impact action from the simulator
- * @returns The personalized twin containing three scenario timelines and custom insights
- */
-export function generatePersonalizedTwin(
-  currentFootprint: number, 
-  simulatedFootprint: number | null, 
-  biggestImpactAction: string | null
-): PersonalizedTwin {
-  
-  const currentYear = new Date().getFullYear();
-  const endYear = 2035;
-  const midYear = 2030;
-  
-  // Scenario A: Current Habits Continue (No Change)
+function generateScenarioA(currentYear: number, endYear: number, currentFootprint: number): FutureScenario {
   const timelineA = calculateFutureTrajectory(currentYear, endYear, currentFootprint, currentFootprint);
-  const scenarioA: FutureScenario = {
+  return {
     id: 'scenario_a',
     name: 'Current Habits Continue',
     description: 'Assuming no meaningful lifestyle change, your footprint remains stable.',
@@ -106,16 +97,14 @@ export function generatePersonalizedTwin(
     futurePercentile: calculatePercentileEstimate(currentFootprint),
     estimatedCarbonSaved: 0
   };
+}
 
-  // Scenario B: Personal Growth Path (Based on Simulator)
-  // If no simulation is run, default to a gentle 5% overall drop over the decade to prevent identical charts
+function generateScenarioB(currentYear: number, endYear: number, midYear: number, currentFootprint: number, simulatedFootprint: number | null, timelineA: DataPoint[]): FutureScenario {
   const targetB = simulatedFootprint && simulatedFootprint < currentFootprint 
     ? simulatedFootprint 
     : Math.max(currentFootprint * 0.95, NET_ZERO_TARGET);
-    
   const timelineB = calculateFutureTrajectory(currentYear, endYear, currentFootprint, targetB);
-  
-  const scenarioB: FutureScenario = {
+  return {
     id: 'scenario_b',
     name: 'Personal Growth Path',
     description: 'Based on your simulated lifestyle improvements.',
@@ -126,13 +115,12 @@ export function generatePersonalizedTwin(
     futurePercentile: calculatePercentileEstimate(targetB),
     estimatedCarbonSaved: calculateCumulativeSavings(timelineA, timelineB)
   };
+}
 
-  // Scenario C: Climate Champion Path (Targeting Net-Zero)
-  const targetC = Math.min(NET_ZERO_TARGET, currentFootprint); // 1000 kg or less
-  // We model a realistic curve: reaching targetC by 2035.
+function generateScenarioC(currentYear: number, endYear: number, midYear: number, currentFootprint: number, timelineA: DataPoint[]): FutureScenario {
+  const targetC = Math.min(NET_ZERO_TARGET, currentFootprint);
   const timelineC = calculateFutureTrajectory(currentYear, endYear, currentFootprint, targetC);
-  
-  const scenarioC: FutureScenario = {
+  return {
     id: 'scenario_c',
     name: 'Climate Champion Path',
     description: 'Optimized path reaching the ultimate Net-Zero target.',
@@ -143,28 +131,45 @@ export function generatePersonalizedTwin(
     futurePercentile: calculatePercentileEstimate(targetC),
     estimatedCarbonSaved: calculateCumulativeSavings(timelineA, timelineC)
   };
-  
-  // Generate Insights
+}
+
+function generateInsights(currentFootprint: number, simulatedFootprint: number | null, scenarioB: FutureScenario, scenarioC: FutureScenario): string[] {
   const insights: string[] = [];
-  
   if (simulatedFootprint && simulatedFootprint < currentFootprint) {
     const reductionPercent = Math.round(((currentFootprint - simulatedFootprint) / currentFootprint) * 100);
     insights.push(`🌱 If you maintain your current simulator changes, you could reduce emissions by ${reductionPercent}% by 2035.`);
   } else {
     insights.push(`🌱 Try adjusting the simulator to see your personalized growth path take shape.`);
   }
-  
   insights.push(`🏆 Your projected Personal Growth footprint would place you in the ${scenarioB.futurePercentile} of CarbonWise users.`);
-  
   const tonsSaved = (scenarioC.estimatedCarbonSaved / 1000).toFixed(1);
   insights.push(`🌍 Following the Climate Champion path could prevent ${tonsSaved} tons of CO₂ over the next decade.`);
+  return insights;
+}
+
+/**
+ * Generates the personalized sustainability twin with three unique projection paths.
+ * Learns from the user's interactive simulator adjustments to create Scenario B.
+ * 
+ * @param currentFootprint The user's current annual carbon footprint (kg CO₂)
+ * @param simulatedFootprint The projected footprint from the user's simulator choices (kg CO₂ or null)
+ * @returns The personalized twin containing three scenario timelines and custom insights
+ */
+export function generatePersonalizedTwin(
+  currentFootprint: number, 
+  simulatedFootprint: number | null
+): PersonalizedTwin {
+  const currentYear = new Date().getFullYear();
+  const endYear = 2035;
+  const midYear = 2030;
+  
+  const scenarioA = generateScenarioA(currentYear, endYear, currentFootprint);
+  const scenarioB = generateScenarioB(currentYear, endYear, midYear, currentFootprint, simulatedFootprint, scenarioA.timeline);
+  const scenarioC = generateScenarioC(currentYear, endYear, midYear, currentFootprint, scenarioA.timeline);
+  const insights = generateInsights(currentFootprint, simulatedFootprint, scenarioB, scenarioC);
 
   return {
-    scenarios: {
-      scenarioA,
-      scenarioB,
-      scenarioC
-    },
+    scenarios: { scenarioA, scenarioB, scenarioC },
     insights
   };
 }
